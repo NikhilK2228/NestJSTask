@@ -44,10 +44,6 @@ export class UserController {
       }
 
 
-//reset password by id
-//if newpassword matches to oldpassword allow user to reset the password
-//newpass
-//oldpass
 
 
 /* newpassword entity added to database by theire id's*/ 
@@ -90,26 +86,28 @@ export class UserController {
 //     }
 //   }
 
-@Patch('/resetpassword/:id')
-  async resetPassword(@Param('id') id: string ,@Body('password') newPassword: string ): Promise<any> {
-    const user = await this.userService.findById(id);
-    if (!user) {
-     return `User with ID ${id} not found`;
+//task: reset password by id
+
+  @Patch('/resetpassword/:id')
+    async resetPassword(@Param('id') id: string ,@Body('password') newPassword: string ): Promise<any> {
+      const user = await this.userService.findById(id);
+      if (!user) {
+      return `User with ID ${id} not found`;
+      }
+
+      const updatedUser = await this.userService.updatePassword(user, newPassword);
+      if (!updatedUser) {
+        return 'Failed to update user password';
+      }
+      return `Password updated successfully for user id ${id}`;
     }
 
-    const updatedUser = await this.userService.updatePassword(user, newPassword);
-    if (!updatedUser) {
-      return 'Failed to update user password';
-    }
-    return `Password updated successfully for user id ${id}`;
-  }
-
-  @Delete('/deleteUser/:id')
-  async deleteUser(@Param('id') id:string): Promise<any>{
-    const usercheck= await this.userService.deleteUser(id);
-    if (!usercheck){
-      throw new NotFoundException(`this ${id} user is not present`)
-    }
-    return `User of ${id} is deleted successfully`
-  }
+  // @Delete('/deleteUser/:id')
+  // async deleteUser(@Param('id') id:string): Promise<any>{
+  //   const usercheck= await this.userService.deleteUser(id);
+  //   if (!usercheck){
+  //     return `this ${id} user is not present`
+  //   }
+  //   return `User of ${id} is deleted successfully`
+  // }
 }

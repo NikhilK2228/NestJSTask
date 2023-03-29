@@ -90,7 +90,7 @@ export class UserService {
     // return await this.userModel.findByIdAndUpdate(id, createUserDto);
     // }
     
-/*get the user by theire id and it its present there update the password*/
+/*get the user by theire id and reset the password*/
     async findById(id: string): Promise<any> {
       return this.userModel.findById(id);
     }
@@ -99,8 +99,7 @@ export class UserService {
       return await this.userModel.findByIdAndUpdate(user);
     }
 
-
-    async deleteUser(id: string): Promise<User>{
-      return await this.userModel.findByIdAndDelete(id);
-    }
+    // async deleteUser(id: string): Promise<User>{
+    //   return await this.userModel.findByIdAndDelete(id);
+    // }
 }
