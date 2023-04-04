@@ -3,6 +3,7 @@ import { User } from './schemas/user.schema';
 import { UserService } from './user.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import{NotFoundException} from '@nestjs/common'
+import { log } from 'console';
 
 
 @Controller('user')
@@ -22,8 +23,19 @@ export class UserController {
 
    //get all user details
     @Get()
-    async findAll(): Promise<User[]> {
-    return this.userService.findAll();
+    async findAll(): Promise<any> {
+    const allUsers=await this.userService.findAll();
+    return `List of all users present: `  +allUsers;
+    }
+    //get perticuler user by their id
+    @Get('/:id')
+    async findById(@Param('id') id:string): Promise<string>{
+      const getuser= await this.userService.findById(id);
+      if(!getuser){
+        return `User with id: ${id} is not present`
+      }
+      console.log(`The user details of ${id} is ${getuser}`);
+      return `The user details of ${id} is: `+getuser;
     }
 
 
@@ -37,12 +49,12 @@ export class UserController {
       // return await this.userService.update(id, password);
       // }
 
-/* for update a password entity for all documents by updateMany() */
+
+/* for update a password entity for all documents by updateMany() (Uses this method for encrypt password)*/
       @Put('/updateUser')
       async update(@Body('password') password:string, createUserDto:CreateUserDto[]): Promise<string> {
       return await this.userService.update(password, createUserDto);
       }
-
 
 
 
@@ -51,63 +63,36 @@ export class UserController {
       // async update(@Param('id') id:string, @Body() createUserDto:CreateUserDto[]): Promise<User> {
       // return await this.userService.update(id, createUserDto);
       // }
-
-
-    // @Get(':id')
-    // findAll(@Body() params): string {
-    //  console.log(params.id);
-    //  return `existing users of id ${params.id}`
-    //  //return `Perticuler user id's student will display: ${params.id}`;
-    // }
   
-    // @Put('/updateUser/:id')
-    // update(@Body('id') id: string, @Body() UserDetails) {
-    //   return `This action updates a ${id} user`;
-    // }
-  
-    // @Delete('/deleteUser/:id')
-    // remove(@Body('id') id:string){
-    //   return `This action perform delete ${id} user`;
-    // }
-
-
-// @Put('isMatch/:id')
-//     async hashPass(@Param('id') id:string, @Body() body: { oldpass: string, newpass:string }):Promise<any> {
-//     // To Fetch the user from the database by their id
-//     const user = await this.userService.hashPass(id, body.oldpass, body.newpass);
-
-//     // Compare the entered password with the stored password 
-//     const isPasswordValid = await this.userService.hashPass(id, body.oldpass, user.newpass);
-
-//     if (isPasswordValid) {
-//       return 'User can reset the password'
-//     } else {
-//       return 'This user can not reset the password'
-//     }
-//   }
 
 //task: reset password by id
 
   @Patch('/resetpassword/:id')
-    async resetPassword(@Param('id') id: string ,@Body('password') newPassword: string ): Promise<any> {
-      const user = await this.userService.findById(id);
-      if (!user) {
-      return `User with ID ${id} not found`;
-      }
-
-      const updatedUser = await this.userService.updatePassword(user, newPassword);
-      if (!updatedUser) {
-        return 'Failed to update user password';
-      }
-      return `Password updated successfully for user id ${id}`;
+  async resetPassword(@Param('id') id: string ,@Body() req:{oldPassword:string,newPassword:string}): Promise<any> {
+    console.log('req',req)
+    const user = await this.userService.findById(id);
+    if (!user) {
+    return `User with ID ${id} not found`;
     }
 
-  // @Delete('/deleteUser/:id')
-  // async deleteUser(@Param('id') id:string): Promise<any>{
-  //   const usercheck= await this.userService.deleteUser(id);
-  //   if (!usercheck){
-  //     return `this ${id} user is not present`
-  //   }
-  //   return `User of ${id} is deleted successfully`
-  // }
+    const updatedUser = await this.userService.updatePassword(id,req.oldPassword,req.newPassword,user.password);
+    if (!updatedUser) {
+      return 'Failed to update user password';
+    }
+    return `Password updated successfully for user id ${id}`;
+  }
+/* upload the profile picture */
+  @Post('/upload')
+  //@UseIntrerseptors
+  
+/*Delete User present in DB by their id*/
+  @Delete('/deleteUser/:id')
+  async deleteUser(@Param('id') id:string): Promise<any>{
+    const usercheck= await this.userService.deleteUser(id);
+    if (!usercheck){
+      return `this ${id} user is not present`
+    }
+    return `User of ${id} is deleted successfully`
+  }
+
 }

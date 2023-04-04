@@ -3,7 +3,7 @@ import { Model } from 'mongoose';
 import { User, UserDocument } from './schemas/user.schema';
 import { InjectModel } from '@nestjs/mongoose';
 import { CreateUserDto } from './dto/create-user.dto';
-import { encodePassword } from './utils/bcrypt';
+import { encodePassword, comparePassword } from './utils/bcrypt';
 import { bcrypt } from "bcrypt";
 
 
@@ -16,27 +16,17 @@ export class UserService {
     return 'Hello World...';
   }
 
-  /*for single entity get */
+/*for single user entity add */
   // async create(createUserDto: CreateUserDto): Promise<User> {
   //   console.log(createUserDto);
   //   const createUser = new this.userModel(createUserDto);
   //   return createUser.save();
   // }
 
-  /*many users entity get */
+/*many users entity get */
   async create( createUserDto: CreateUserDto[]): Promise<User[]> {
     return this.userModel.insertMany(createUserDto);
   }
-
-
-  /*for to encryption the password of users */
-    // async create( createUserDto: CreateUserDto): Promise<User[]> {
-    //   const password = encodePassword(createUserDto.password);
-    //   console.log(password);
-    //   const saveUser = this.userModel.create({...CreateUserDto, password});
-    //   return this.userModel.save(saveUser);
-    // }
-
 
   async findAll(): Promise<User[]> {
     // console.log(UserDocument);
@@ -49,57 +39,38 @@ export class UserService {
   async update(password: string, createUserDto:CreateUserDto[]): Promise<string>{
     const encrypPass = encodePassword(password);
     console.log(encrypPass);
-    let updateduser =  await this.userModel.updateMany({}, {$set:{password:encrypPass}  });
+    let updateduser =  await this.userModel.updateMany({}, {$set:{password:encrypPass}});
     console.log(updateduser);
-    return `password updated successfully`
+    return `password updated successfully for all users as in encrypted form`
   }
 
 
-/*to decode the password and compare with the old password to the new password */
-  // async hashPass(id:string, oldpass:string, newpass:string): Promise<any> {
-  //   const hashedPassword = hashPass(oldpass);
-  //   console.log(hashedPassword);
-  //   const isMatch = await this.userModel.findByIdAndUpdate(id, bcrypt.compare(oldpass, newpass)) 
-  //   return isMatch;
-  // }
-
-
-    //return this.userModel.update(createUserDto.id, createUserDto);
-
-    // const userIndex = this.users.findIndex(user => user.id === id);
-    // if (userIndex === -1) {
-    //   throw new NotFoundException(`User with ID ${id} not found`);
-    // }
-    // const user: User = {
-    //   ...this.users[userIndex],
-    //   ...createUserDto,
-    // };
-    // this.users[userIndex] = user;
-    // return user;
-  //}
-
-
-  /*For to reset the password of user by its id */
-  // async update(id:string, createUserDto:CreateUserDto[]): Promise<string>{
-  //   return this.userModel.findByIdAndUpdate(id, createUserDto);
-  // }
+/*to decode the password and compare with the old password */
 
 /* to add entity newpassword*/
     // async update(id:string, createUserDto:CreateUserDto[]): Promise<User>{
     // console.log('user updated');
     // return await this.userModel.findByIdAndUpdate(id, createUserDto);
     // }
-    
+
+
 /*get the user by theire id and reset the password*/
     async findById(id: string): Promise<any> {
       return this.userModel.findById(id);
     }
-    async updatePassword(user: User, newPassword: string): Promise<User> {
-      user.password = newPassword;
-      return await this.userModel.findByIdAndUpdate(user);
+
+    async updatePassword(id: string, oldPassword:string,newPassword:string, savedPassword:string): Promise<any> {
+      const isValidPass= comparePassword(oldPassword,savedPassword);
+      if(!isValidPass){
+        console.log ('This is not a valid password');
+      }
+      let newpass = await encodePassword(newPassword);
+      console.log("newpassword in encryptedform: " +newpass);
+      return await this.userModel.findByIdAndUpdate(id, {password:newpass});
     }
 
-    // async deleteUser(id: string): Promise<User>{
-    //   return await this.userModel.findByIdAndDelete(id);
-    // }
+/*Delete user present in DB by their id*/
+    async deleteUser(id: string): Promise<User>{
+      return await this.userModel.findByIdAndDelete(id);
+    }
 }
