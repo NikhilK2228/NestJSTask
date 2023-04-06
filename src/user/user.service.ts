@@ -1,10 +1,9 @@
-import { Injectable, NotFoundException} from '@nestjs/common';
+import { Injectable, NotFoundException, UploadedFile} from '@nestjs/common';
 import { Model } from 'mongoose';
 import { User, UserDocument } from './schemas/user.schema';
 import { InjectModel } from '@nestjs/mongoose';
 import { CreateUserDto } from './dto/create-user.dto';
 import { encodePassword, comparePassword } from './utils/bcrypt';
-import { bcrypt } from "bcrypt";
 
 
 
@@ -68,6 +67,22 @@ export class UserService {
       console.log("newpassword in encryptedform: " +newpass);
       return await this.userModel.findByIdAndUpdate(id, {password:newpass});
     }
+
+/* profile picture upload  */
+
+    async setProfile(id: string, profilePic:string):Promise<any>{
+      return await this.userModel.findByIdAndUpdate(id, {profilepicture:profilePic})
+    }
+
+
+/* for token authentication */
+    async createAuthUser(createUserDto:CreateUserDto[]):Promise<any>{
+      return await this.userModel.create(createUserDto);
+    }
+    async getAuthUser(query: object):Promise<any>{
+      return await this.userModel.findOne(query);
+    }
+
 
 /*Delete user present in DB by their id*/
     async deleteUser(id: string): Promise<User>{

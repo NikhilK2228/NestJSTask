@@ -17,8 +17,8 @@ export class User {
   @Prop()
   password: string;
 
-  // @Prop()
-  // newpassword:string;
+  @Prop()
+  profilepicture:string;
 
 }
 

@@ -1,9 +1,14 @@
-import { Body, Controller, Param, Delete, Get, Post, Put, Patch } from '@nestjs/common';
+import { Body, Controller, Param, Delete, Get, Post, Put, Patch, UseInterceptors, UploadedFile,Res } from '@nestjs/common';
 import { User } from './schemas/user.schema';
 import { UserService } from './user.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import{NotFoundException} from '@nestjs/common'
-import { log } from 'console';
+import { Express } from 'express';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { diskStorage } from 'multer';
+import {v4 as uuidv4} from 'uuid';
+import path, { extname } from 'path';
+import { Observable, of } from 'rxjs';
 
 
 @Controller('user')
@@ -81,10 +86,50 @@ export class UserController {
     }
     return `Password updated successfully for user id ${id}`;
   }
+
 /* upload the profile picture */
-  @Post('/upload')
-  //@UseIntrerseptors
-  
+  @Post('upload/:id')
+  @UseInterceptors(FileInterceptor('file', {
+    storage: diskStorage({
+      destination: './uploads/profilepictures',
+      filename:(req, file, cb)=>{
+        const filename:string=Array(32).fill(null).map(()=>(Math.round(Math.random() * 16)).toString(16)).join('')
+        cb(null,`${filename}${extname(file.originalname)}`)
+      }
+    })
+  }))
+
+  // async addProfile(@UploadedFile() file) {
+  //   console.log(file);
+  //   return {
+  //     path: file.path,
+  //     filename: file.originalname,
+  //     mimetype: file.mimetype
+  //   };
+  // }
+  async uploadProfile(@Param('id') id:string, @UploadedFile() file) {
+    console.log(file);
+    const checkuser= await this.userService.findById(id);
+    if(!checkuser){
+      return `user doesnot exists`
+    }
+    const filename:string = Array(32).fill(null).map(()=>(Math.round(Math.random() * 16)).toString(16)).join('');
+    //instead of using this filename we can also use ${file.name}
+    const uploadresult= await this.userService.setProfile(id, `${filename}`);
+    console.log(uploadresult);
+    return `profile picture updated for user ${id}`;
+    
+  }
+
+/*Access_Token of user */
+  @Post('/signup')
+    async createUser(createUserDto:CreateUserDto[]): Promise<User> {
+        const result = await this.userService.createAuthUser(createUserDto);
+        return result;
+  }
+
+
+
 /*Delete User present in DB by their id*/
   @Delete('/deleteUser/:id')
   async deleteUser(@Param('id') id:string): Promise<any>{
