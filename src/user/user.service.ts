@@ -4,12 +4,13 @@ import { User, UserDocument } from './schemas/user.schema';
 import { InjectModel } from '@nestjs/mongoose';
 import { CreateUserDto } from './dto/create-user.dto';
 import { encodePassword, comparePassword } from './utils/bcrypt';
+import { JwtService } from '@nestjs/jwt';
 
 
 
 @Injectable()
 export class UserService {
-  constructor(@InjectModel(User.name) private userModel: Model<User>) {}
+  constructor(@InjectModel(User.name) private userModel: Model<User>, private readonly jwtService:JwtService) {}
   //private readonly users: User[] = [];
   getHello(): String{
     return 'Hello World...';
@@ -69,20 +70,21 @@ export class UserService {
     }
 
 /* profile picture upload  */
-
     async setProfile(id: string, profilePic:string):Promise<any>{
       return await this.userModel.findByIdAndUpdate(id, {profilepicture:profilePic})
     }
 
-
-/* for token authentication */
-    async createAuthUser(createUserDto:CreateUserDto[]):Promise<any>{
-      return await this.userModel.create(createUserDto);
+/* for Access_Token of user present by theire emailid*/
+    async findOne(emailid):Promise<any>{
+      const user= await this.userModel.findOne(emailid);
+      if(!user){
+        console.log('This User Not Exists..')
+        throw new NotFoundException ('This User Not Exists..')
+      }
+      const payload={id:user.id,username:user.username, emailid:user.emailid};
+      console.log(payload);
+      return {access_token: this.jwtService.sign(payload)}
     }
-    async getAuthUser(query: object):Promise<any>{
-      return await this.userModel.findOne(query);
-    }
-
 
 /*Delete user present in DB by their id*/
     async deleteUser(id: string): Promise<User>{

@@ -1,4 +1,4 @@
-import { Body, Controller, Param, Delete, Get, Post, Put, Patch, UseInterceptors, UploadedFile,Res } from '@nestjs/common';
+import { Body, Controller, Param, Delete, Get, Post, Put, Patch, UseInterceptors, UploadedFile,Res, Request } from '@nestjs/common';
 import { User } from './schemas/user.schema';
 import { UserService } from './user.service';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -9,11 +9,13 @@ import { diskStorage } from 'multer';
 import {v4 as uuidv4} from 'uuid';
 import path, { extname } from 'path';
 import { Observable, of } from 'rxjs';
+import { AuthService } from 'src/auth/auth.service';
+
 
 
 @Controller('user')
 export class UserController {
-  constructor(private readonly userService: UserService) {} 
+  constructor(private readonly userService: UserService, private authService: AuthService) {} 
 
   //   @Post('/addUser')
   //  async saveUser(@Body() userDetails){
@@ -121,14 +123,11 @@ export class UserController {
     
   }
 
-/*Access_Token of user */
-  @Post('/signup')
-    async createUser(createUserDto:CreateUserDto[]): Promise<User> {
-        const result = await this.userService.createAuthUser(createUserDto);
-        return result;
+/*Access_Token of user by theire emailid*/
+  @Post('/login')
+  async login(@Body() emailid:string) {
+      return await this.userService.findOne(emailid);
   }
-
-
 
 /*Delete User present in DB by their id*/
   @Delete('/deleteUser/:id')
