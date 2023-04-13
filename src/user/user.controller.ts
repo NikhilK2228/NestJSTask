@@ -9,13 +9,12 @@ import { diskStorage } from 'multer';
 import {v4 as uuidv4} from 'uuid';
 import path, { extname } from 'path';
 import { Observable, of } from 'rxjs';
-import { AuthService } from 'src/auth/auth.service';
 
 
 
 @Controller('user')
 export class UserController {
-  constructor(private readonly userService: UserService, private authService: AuthService) {} 
+  constructor(private readonly userService: UserService) {} 
 
   //   @Post('/addUser')
   //  async saveUser(@Body() userDetails){
