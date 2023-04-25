@@ -1,14 +1,14 @@
-import { Body, Controller, Param, Delete, Get, Post, Put, Patch, UseInterceptors, UploadedFile,Res, Request } from '@nestjs/common';
+import { Body, Controller, Param, Delete, Get, Post, Put, Patch, UseInterceptors, UploadedFile } from '@nestjs/common';
 import { User } from './schemas/user.schema';
 import { UserService } from './user.service';
 import { CreateUserDto } from './dto/create-user.dto';
-import{NotFoundException} from '@nestjs/common'
-import { Express } from 'express';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
-import {v4 as uuidv4} from 'uuid';
-import path, { extname } from 'path';
-import { Observable, of } from 'rxjs';
+import { extname } from 'path';
+import { Product } from './Schemas/product.schema';
+import { CreateProductDTO } from './dto/product.dto';
+import { CreateOrderDto } from './dto/order.dto';
+import { Order } from './Schemas/order.schema';
 
 
 
@@ -22,27 +22,27 @@ export class UserController {
   //     return await this.userService.create(userDetails)
   //   }
 
-    @Post('/addUser')
-    async saveUser(@Body() createUserDto: CreateUserDto[]): Promise<User[]>{
-    return await this.userService.create(createUserDto);
-     }
+  @Post('/addUser')
+  async saveUser(@Body() createUserDto: CreateUserDto[]): Promise<User[]>{
+  return await this.userService.create(createUserDto);
+  }
 
-   //get all user details
-    @Get()
-    async findAll(): Promise<any> {
-    const allUsers=await this.userService.findAll();
-    return `List of all users present: `  +allUsers;
+  //get all user details
+  @Get()
+  async findAll(): Promise<any> {
+  const allUsers=await this.userService.findAll();
+  return `List of all users present: `  +allUsers;
+  }
+  //get perticuler user by their id
+  @Get('/:id')
+  async findById(@Param('id') id:string): Promise<string>{
+    const getuser= await this.userService.findById(id);
+    if(!getuser){
+      return `User with id: ${id} is not present`
     }
-    //get perticuler user by their id
-    @Get('/:id')
-    async findById(@Param('id') id:string): Promise<string>{
-      const getuser= await this.userService.findById(id);
-      if(!getuser){
-        return `User with id: ${id} is not present`
-      }
-      console.log(`The user details of ${id} is ${getuser}`);
-      return `The user details of ${id} is: `+getuser;
-    }
+    console.log(`The user details of ${id} is ${getuser}`);
+    return `The user details of ${id} is: `+getuser;
+  }
 
 
 //update password key "test123"
@@ -78,9 +78,8 @@ export class UserController {
     console.log('req',req)
     const user = await this.userService.findById(id);
     if (!user) {
-    return `User with ID ${id} not found`;
+      return `User with ID ${id} not found`;    
     }
-
     const updatedUser = await this.userService.updatePassword(id,req.oldPassword,req.newPassword,user.password);
     if (!updatedUser) {
       return 'Failed to update user password';
@@ -125,7 +124,7 @@ export class UserController {
 /*Access_Token of user by theire emailid*/
   @Post('/login')
   async login(@Body() emailid:string) {
-      return await this.userService.findOne(emailid);
+    return await this.userService.findOne(emailid);
   }
 
 /*Delete User present in DB by their id*/
@@ -136,6 +135,29 @@ export class UserController {
       return `this ${id} user is not present`
     }
     return `User of ${id} is deleted successfully`
+  }
+
+/*order and product details */
+  @Post('/createProduct')
+  async createProduct(@Body() productdto:CreateProductDTO):Promise<Product>{
+    return await this.userService.createProduct(productdto);
+  }
+  @Post('/createOrder')
+  async createOrder(@Body() orderdto: CreateOrderDto[]):Promise<Order>{
+    return await this.userService.createOrder(orderdto);
+  }
+  @Get('/order/allOrders')
+  async findAllOrders():Promise<Order[]>{
+    return await this.userService.findAllOrders()
+  }
+  @Get('/order/:id')
+  async getOrderId(@Param('id') id:string):Promise<Order>{
+    return await this.userService.getOrderId(id);
+  }
+  @Get('/userOrders/:id')
+  async getUserOrders(@Param('id')id:string):Promise<Order[]>{
+    //console.log(id);
+    return await this.userService.getUserOrders(id);
   }
 
 }
